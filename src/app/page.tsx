@@ -27,28 +27,20 @@ export default function Home() {
       const name = searchParams.get('name');
       const data = searchParams.get('data');
 
-      console.log('URL Ingestion Debug:', {
-        search: window.location.search,
-        name,
-        data: data ? `${data.substring(0, 50)}...` : null,
-      });
-
       if (name && data) {
         // Decode shared JSM
         const decoded = decodeJSM(data);
-        console.log('Decoded JSM:', decoded);
 
         if (decoded) {
           // Check if JSM with this name already exists
           const { entries, createEntry, updateEntry, setActive } = useLibraryStore.getState();
           const existing = entries.find(e => e.name === name);
 
-          console.log('Existing entry:', existing);
+          console.warn('Existing entry EXISTS. Delete or rename to import', existing);
 
           if (!existing) {
             // Create new entry with shared data
             const newId = createEntry(decoded.name, decoded.raw, decoded.positions);
-            console.log('Created entry with ID:', newId);
 
             // Update with additional fields (layout, edge data)
             updateEntry(newId, {
@@ -59,7 +51,6 @@ export default function Home() {
             loadEntry(newId);
           } else {
             // Load existing entry
-            console.log('Loading existing entry:', existing.id);
             setActive(existing.id);
             loadEntry(existing.id);
           }
@@ -69,7 +60,6 @@ export default function Home() {
 
       // Fall back to normal initialization
       const { activeId } = useLibraryStore.getState();
-      console.log('Normal init with activeId:', activeId);
       if (activeId) loadEntry(activeId);
     };
 

@@ -27,8 +27,6 @@ export function encodeJSM(jsm: SavedJSM): string {
 
 export function decodeJSM(encoded: string): SavedJSM | null {
   try {
-    console.log('Attempting to decode:', encoded.substring(0, 50));
-
     const b64 = urlSafeDecode(encoded);
     const binary = atob(b64);
     const bytes = new Uint8Array(binary.length);
@@ -36,10 +34,8 @@ export function decodeJSM(encoded: string): SavedJSM | null {
       bytes[i] = binary.charCodeAt(i);
     }
     const json = new TextDecoder().decode(bytes);
-    console.log('After decode, first 100 chars:', json.substring(0, 100));
 
     const result = JSON.parse(json) as SavedJSM;
-    console.log('Parsed result successfully');
     return result;
   } catch (error) {
     console.error('Error decoding JSM:', error);
