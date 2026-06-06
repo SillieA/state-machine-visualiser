@@ -1,0 +1,183 @@
+'use client';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  useEdges,
+  useReactFlow,
+  type EdgeProps,
+  type Edge,
+} from '@xyflow/react';
+import { useStore } from '@/lib/store';
+
+export type EditableEdge = Edge;
+
+export function EditableEdge({
+  id,
+  source,
+  target,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  label,
+  markerEnd,
+  style,
+}: EdgeProps) {
+  const updateEdgeLabel = useStore(s => s.updateEdgeLabel);
+  const clearPendingLabel = useStore(s => s.clearPendingLabel);
+  const pendingLabelEdgeId = useStore(s => s.pendingLabelEdgeId);
+  const selectEdge = useStore(s => s.selectEdge);
+  const storedCp = useStore(s => s.edgeControlPoints[id]);
+  const setEdgeControlPoint = useStore(s => s.setEdgeControlPoint);
+
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { screenToFlowPosition } = useReactFlow();
+
+  const isPending = pendingLabelEdgeId === id;
+
+  useEffect(() => {
+    if (isPending) {
+      setDraft(String(label ?? ''));
+      setEditing(true);
+      clearPendingLabel();
+    }
+  }, [isPending, label, clearPendingLabel]);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  const allEdges = useEdges();
+  const hasReverse = allEdges.some(e => e.source === target && e.target === source);
+  const OFFSET = 60;
+
+  let edgePath: string;
+  let labelX: number;
+  let labelY: number;
+  let cpX: number;
+  let cpY: number;
+
+  if (storedCp) {
+    cpX = storedCp.x;
+    cpY = storedCp.y;
+    edgePath = `M ${sourceX},${sourceY} Q ${cpX},${cpY} ${targetX},${targetY}`;
+    labelX = (sourceX + 2 * cpX + targetX) / 4;
+    labelY = (sourceY + 2 * cpY + targetY) / 4;
+  } else if (hasReverse) {
+    // Canonical direction: always from the lexicographically smaller node ID to the larger.
+    // Both edges in a bidirectional pair compute the SAME perpendicular direction,
+    // then we apply +OFFSET to one and -OFFSET to the other to separate them.
+    const isCanonical = source <= target;
+    const canonDx = isCanonical ? targetX - sourceX : sourceX - targetX;
+    const canonDy = isCanonical ? targetY - sourceY : sourceY - targetY;
+    const len = Math.sqrt(canonDx * canonDx + canonDy * canonDy) || 1;
+    const midX = (sourceX + targetX) / 2;
+    const midY = (sourceY + targetY) / 2;
+    const sign = isCanonical ? 1 : -1;
+    cpX = midX + (-canonDy / len) * OFFSET * sign;
+    cpY = midY + (canonDx / len) * OFFSET * sign;
+    edgePath = `M ${sourceX},${sourceY} Q ${cpX},${cpY} ${targetX},${targetY}`;
+    labelX = (sourceX + 2 * cpX + targetX) / 4;
+    labelY = (sourceY + 2 * cpY + targetY) / 4;
+  } else {
+    [edgePath, labelX, labelY] = getBezierPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+    });
+    cpX = labelX;
+    cpY = labelY;
+  }
+
+  const showDragHandle = !!storedCp || hasReverse;
+
+  const commit = useCallback(() => {
+    updateEdgeLabel(id, draft.trim());
+    setEditing(false);
+  }, [id, draft, updateEdgeLabel]);
+
+  function startEditing() {
+    setDraft(String(label ?? ''));
+    setEditing(true);
+    selectEdge(id);
+  }
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<SVGCircleElement>) => {
+    e.stopPropagation();
+    (e.currentTarget as SVGCircleElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<SVGCircleElement>) => {
+      if (e.buttons !== 1) return;
+      const flowPos = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      setEdgeControlPoint(id, flowPos);
+    },
+    [id, screenToFlowPosition, setEdgeControlPoint],
+  );
+
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setEdgeControlPoint(id, null);
+    },
+    [id, setEdgeControlPoint],
+  );
+
+  return (
+    <>
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      {showDragHandle && (
+        <circle
+          cx={cpX}
+          cy={cpY}
+          r={4}
+          fill="white"
+          stroke="#94a3b8"
+          strokeWidth={1.5}
+          style={{ pointerEvents: 'all', cursor: 'grab' }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onDoubleClick={handleDoubleClick}
+        />
+      )}
+      <EdgeLabelRenderer>
+        <div
+          style={{ transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)` }}
+          className="absolute pointer-events-all nodrag nopan"
+        >
+          {editing ? (
+            <input
+              ref={inputRef}
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onBlur={commit}
+              onKeyDown={e => {
+                if (e.key === 'Enter') commit();
+                if (e.key === 'Escape') setEditing(false);
+              }}
+              className="text-xs text-zinc-800 border border-blue-400 rounded px-1.5 py-0.5 bg-white shadow-sm outline-none w-36"
+              placeholder="condition…"
+            />
+          ) : (
+            <button
+              onClick={startEditing}
+              className="text-xs bg-white border border-zinc-200 rounded px-1.5 py-0.5 text-zinc-800 hover:border-blue-400 shadow-sm transition-colors max-w-[160px] truncate"
+            >
+              {label ? String(label) : <span className="text-zinc-300 italic">condition</span>}
+            </button>
+          )}
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+}
