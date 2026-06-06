@@ -1,0 +1,49 @@
+'use client';
+import type { SavedJSM } from '@/lib/libraryStore';
+
+function urlSafeEncode(b64: string): string {
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function urlSafeDecode(str: string): string {
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = 4 - (str.length % 4);
+  if (padding !== 4) {
+    str += '='.repeat(padding);
+  }
+  return str;
+}
+
+export function encodeJSM(jsm: SavedJSM): string {
+  const json = JSON.stringify(jsm);
+  const utf8Bytes = new TextEncoder().encode(json);
+  let binary = '';
+  for (let i = 0; i < utf8Bytes.length; i++) {
+    binary += String.fromCharCode(utf8Bytes[i]);
+  }
+  const b64 = btoa(binary);
+  return urlSafeEncode(b64);
+}
+
+export function decodeJSM(encoded: string): SavedJSM | null {
+  try {
+    console.log('Attempting to decode:', encoded.substring(0, 50));
+
+    const b64 = urlSafeDecode(encoded);
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const json = new TextDecoder().decode(bytes);
+    console.log('After decode, first 100 chars:', json.substring(0, 100));
+
+    const result = JSON.parse(json) as SavedJSM;
+    console.log('Parsed result successfully');
+    return result;
+  } catch (error) {
+    console.error('Error decoding JSM:', error);
+    console.error('Encoded string (first 200 chars):', encoded.substring(0, 200));
+    return null;
+  }
+}
