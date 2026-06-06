@@ -1,6 +1,7 @@
 'use client';
 import { useStore } from '@/lib/store';
 import { useLibraryStore } from '@/lib/libraryStore';
+import { ShareButton } from '@/components/ShareButton';
 import { exportJSM } from '@/lib/jsm/export';
 
 export function JsmInput() {
@@ -55,6 +56,7 @@ export function JsmInput() {
             >
               Reset Layout
             </button>
+            <ShareButton />
             <button
               onClick={() => activeEntry && exportJSM(activeEntry.name, activeEntry.raw)}
               disabled={!activeEntry}
