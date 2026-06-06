@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -10,7 +10,6 @@ import {
   type Edge,
 } from '@xyflow/react';
 import { useStore } from '@/lib/store';
-import type { LayoutType } from '@/lib/jsm/layout';
 
 export type EditableEdge = Edge;
 
@@ -56,10 +55,12 @@ export function EditableEdge({
 
   const isPending = pendingLabelEdgeId === id;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isPending) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setDraft(String(label ?? ''));
       setEditing(true);
+      /* eslint-enable react-hooks/set-state-in-effect */
       clearPendingLabel();
     }
   }, [isPending, label, clearPendingLabel]);

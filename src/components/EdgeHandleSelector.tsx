@@ -1,7 +1,5 @@
 'use client';
 
-const POSITIONS = ['top', 'right', 'bottom', 'left'] as const;
-
 interface EdgeHandleSelectorProps {
   label: string;
   type: 'source' | 'target';

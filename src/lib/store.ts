@@ -9,7 +9,7 @@ import {
   type XYPosition,
 } from '@xyflow/react';
 import { validateJSM } from '@/lib/jsm/validate';
-import { parseJSM, type StateNode, type StateNodeData } from '@/lib/jsm/parse';
+import { parseJSM, type StateNode } from '@/lib/jsm/parse';
 import { applyLayout, type LayoutType } from '@/lib/jsm/layout';
 import { serializeToJSM } from '@/lib/jsm/serialize';
 import { useLibraryStore, type Positions, type PersistedEdgeData } from '@/lib/libraryStore';

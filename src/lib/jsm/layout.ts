@@ -52,7 +52,6 @@ class GridLayout implements LayoutAlgorithm {
 
     const GRID_SPACING_X = 200;
     const GRID_SPACING_Y = 120;
-    const COMPONENT_SPACING = 300;
 
     const edgeMap = new Map<string, string[]>();
     edges.forEach(edge => {

@@ -10,7 +10,7 @@ export function JsmInput() {
   const setInput = useStore(s => s.setInput);
   const resetLayout = useStore(s => s.resetLayout);
 
-  const { activeId, entries, isHydrated, setDrawerOpen, setHydrated } = useLibraryStore();
+  const { activeId, entries, isHydrated, setDrawerOpen } = useLibraryStore();
   const activeEntry = entries.find(e => e.id === activeId);
 
   // Hydrate on mount

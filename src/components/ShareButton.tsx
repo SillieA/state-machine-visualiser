@@ -9,7 +9,6 @@ export function ShareButton() {
   const nodes = useStore(s => s.nodes);
   const layoutAlgorithm = useStore(s => s.layoutAlgorithm);
   const edgeControlPoints = useStore(s => s.edgeControlPoints);
-  const edges = useStore(s => s.edges);
   const activeId = useLibraryStore(s => s.activeId);
   const entries = useLibraryStore(s => s.entries);
 

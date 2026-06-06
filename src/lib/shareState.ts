@@ -39,7 +39,6 @@ export function decodeJSM(encoded: string): SavedJSM | null {
     return result;
   } catch (error) {
     console.error('Error decoding JSM:', error);
-    console.error('Encoded string (first 200 chars):', encoded.substring(0, 200));
     return null;
   }
 }

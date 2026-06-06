@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { EdgeHandleSelector } from '@/components/EdgeHandleSelector';
 import type { EntryAction } from '@/lib/jsm/schema';
@@ -60,12 +60,13 @@ export function InspectorPanel() {
   const [nameDraft, setNameDraft] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (selectedNode) {
       const localName = selectedNode.id.split('.').pop()!;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNameDraft(localName);
     }
-  }, [selectedNode?.id]);
+  }, [selectedNode]);
 
   function commitRename() {
     if (!selectedNode || !nameDraft.trim()) return;
@@ -149,7 +150,6 @@ export function InspectorPanel() {
   }
 
   // Node inspector
-  const localName = selectedNode!.id.split('.').pop()!;
   const isStart = selectedNode!.id === start;
 
   return (
