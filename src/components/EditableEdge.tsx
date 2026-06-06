@@ -10,8 +10,22 @@ import {
   type Edge,
 } from '@xyflow/react';
 import { useStore } from '@/lib/store';
+import type { LayoutType } from '@/lib/jsm/layout';
 
 export type EditableEdge = Edge;
+
+function getOrthogonalPath(
+  sourceX: number,
+  sourceY: number,
+  targetX: number,
+  targetY: number,
+): { path: string; midX: number } {
+  const CORNER_OFFSET = 40;
+  const offsetX = Math.abs(targetX - sourceX) < 120 ? CORNER_OFFSET : Math.abs(targetX - sourceX) / 3;
+  const midX = sourceX + (targetX > sourceX ? offsetX : -offsetX);
+  const path = `M ${sourceX},${sourceY} L ${midX},${sourceY} L ${midX},${targetY} L ${targetX},${targetY}`;
+  return { path, midX };
+}
 
 export function EditableEdge({
   id,
@@ -33,6 +47,7 @@ export function EditableEdge({
   const selectEdge = useStore(s => s.selectEdge);
   const storedCp = useStore(s => s.edgeControlPoints[id]);
   const setEdgeControlPoint = useStore(s => s.setEdgeControlPoint);
+  const layoutAlgorithm = useStore(s => s.layoutAlgorithm);
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
@@ -63,16 +78,22 @@ export function EditableEdge({
   let cpX: number;
   let cpY: number;
 
-  if (storedCp) {
+  const useOrthogonal = layoutAlgorithm === 'grid' && !hasReverse;
+
+  if (storedCp && layoutAlgorithm !== 'grid') {
     cpX = storedCp.x;
     cpY = storedCp.y;
     edgePath = `M ${sourceX},${sourceY} Q ${cpX},${cpY} ${targetX},${targetY}`;
     labelX = (sourceX + 2 * cpX + targetX) / 4;
     labelY = (sourceY + 2 * cpY + targetY) / 4;
+  } else if (useOrthogonal) {
+    const ortho = getOrthogonalPath(sourceX, sourceY, targetX, targetY);
+    edgePath = ortho.path;
+    labelX = (sourceX + ortho.midX + targetX) / 3;
+    labelY = (sourceY + targetY) / 2;
+    cpX = labelX;
+    cpY = labelY;
   } else if (hasReverse) {
-    // Canonical direction: always from the lexicographically smaller node ID to the larger.
-    // Both edges in a bidirectional pair compute the SAME perpendicular direction,
-    // then we apply +OFFSET to one and -OFFSET to the other to separate them.
     const isCanonical = source <= target;
     const canonDx = isCanonical ? targetX - sourceX : sourceX - targetX;
     const canonDy = isCanonical ? targetY - sourceY : sourceY - targetY;
@@ -98,7 +119,7 @@ export function EditableEdge({
     cpY = labelY;
   }
 
-  const showDragHandle = !!storedCp || hasReverse;
+  const showDragHandle = !!storedCp || (hasReverse && layoutAlgorithm !== 'grid');
 
   const commit = useCallback(() => {
     updateEdgeLabel(id, draft.trim());

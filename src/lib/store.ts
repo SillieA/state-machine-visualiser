@@ -10,7 +10,7 @@ import {
 } from '@xyflow/react';
 import { validateJSM } from '@/lib/jsm/validate';
 import { parseJSM, type StateNode, type StateNodeData } from '@/lib/jsm/parse';
-import { applyDagreLayout } from '@/lib/jsm/layout';
+import { applyLayout, type LayoutType } from '@/lib/jsm/layout';
 import { serializeToJSM } from '@/lib/jsm/serialize';
 import { useLibraryStore, type Positions, type PersistedEdgeData } from '@/lib/libraryStore';
 import type { EntryAction } from '@/lib/jsm/schema';
@@ -21,6 +21,7 @@ interface StoreState {
   nodes: StateNode[];
   edges: Edge[];
   start: string;
+  layoutAlgorithm: LayoutType;
   selectedNodeId: string | null;
   selectedEdgeId: string | null;
   pendingLabelEdgeId: string | null;
@@ -31,6 +32,7 @@ interface StoreState {
   loadEntry: (id: string) => void;
   resetLayout: () => void;
   newJSM: () => void;
+  setLayoutAlgorithm: (type: LayoutType) => void;
   // canvas editing
   addNode: (position: XYPosition) => void;
   deleteNodes: (ids: string[]) => void;
@@ -40,6 +42,7 @@ interface StoreState {
   updateEdgeLabel: (edgeId: string, label: string) => void;
   deleteEdges: (ids: string[]) => void;
   setEdgeControlPoint: (edgeId: string, point: XYPosition | null) => void;
+  updateEdgeHandle: (edgeId: string, sourceHandle?: string | null, targetHandle?: string | null) => void;
   clearPendingLabel: () => void;
   selectNode: (id: string | null) => void;
   selectEdge: (id: string | null) => void;
@@ -52,7 +55,7 @@ type ParseResult =
   | { ok: true; nodes: StateNode[]; edges: Edge[]; startName: string }
   | { ok: false; error: string };
 
-function tryParse(raw: string, existingPositions: Positions): ParseResult {
+function tryParse(raw: string, existingPositions: Positions, layoutType: LayoutType): ParseResult {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -63,7 +66,7 @@ function tryParse(raw: string, existingPositions: Positions): ParseResult {
   if (!result.success) return { ok: false, error: result.error };
 
   const { nodes, edges } = parseJSM(result.data);
-  const laidOut = applyDagreLayout(nodes, edges);
+  const laidOut = applyLayout(nodes, edges, layoutType);
   const merged = laidOut.map(n => ({
     ...n,
     position: existingPositions[n.id] ?? n.position,
@@ -99,7 +102,7 @@ function buildEdgeData(
   edges.forEach(edge => {
     const key = stableEdgeKey(edges, edge);
     const cp = controlPoints[edge.id];
-    if (cp || edge.sourceHandle || edge.targetHandle) {
+    if (cp || edge.sourceHandle != null || edge.targetHandle != null) {
       out[key] = {
         ...(cp ? { controlPoint: cp } : {}),
         ...(edge.sourceHandle != null ? { sourceHandle: edge.sourceHandle } : {}),
@@ -146,6 +149,7 @@ export const useStore = create<StoreState>((set, get) => {
     nodes: [],
     edges: [],
     start: '',
+    layoutAlgorithm: 'hierarchical',
     selectedNodeId: null,
     selectedEdgeId: null,
     pendingLabelEdgeId: null,
@@ -156,7 +160,7 @@ export const useStore = create<StoreState>((set, get) => {
       if (renderTimer) clearTimeout(renderTimer);
       renderTimer = setTimeout(() => {
         const lib = useLibraryStore.getState();
-        const result = tryParse(input, extractPositions(get().nodes));
+        const result = tryParse(input, extractPositions(get().nodes), get().layoutAlgorithm);
 
         if (!result.ok) {
           set({ error: input.trim() ? result.error : null });
@@ -179,9 +183,10 @@ export const useStore = create<StoreState>((set, get) => {
     loadEntry: (id) => {
       const entry = useLibraryStore.getState().entries.find(e => e.id === id);
       if (!entry) return;
-      const result = tryParse(entry.raw, entry.positions);
+      const layoutAlgo = entry.layoutAlgorithm ?? 'hierarchical';
+      const result = tryParse(entry.raw, entry.positions, layoutAlgo);
       if (!result.ok) {
-        set({ input: entry.raw, nodes: [], edges: [], start: '', error: result.error, edgeControlPoints: {} });
+        set({ input: entry.raw, nodes: [], edges: [], start: '', error: result.error, edgeControlPoints: {}, layoutAlgorithm: layoutAlgo });
       } else {
         const storedEdgeData = entry.edgeData ?? {};
         const edgeControlPoints: Record<string, XYPosition> = {};
@@ -204,14 +209,15 @@ export const useStore = create<StoreState>((set, get) => {
           start: result.startName,
           error: null,
           edgeControlPoints,
+          layoutAlgorithm: layoutAlgo,
         });
       }
       useLibraryStore.getState().setActive(id);
     },
 
     resetLayout: () => {
-      const { nodes, edges, start } = get();
-      const laidOut = applyDagreLayout(nodes, edges) as StateNode[];
+      const { nodes, edges, start, layoutAlgorithm } = get();
+      const laidOut = applyLayout(nodes, edges, layoutAlgorithm) as StateNode[];
       set({ nodes: laidOut });
       const { activeId } = useLibraryStore.getState();
       if (activeId) useLibraryStore.getState().updateEntry(activeId, { positions: {} });
@@ -224,8 +230,24 @@ export const useStore = create<StoreState>((set, get) => {
       if (renderTimer) clearTimeout(renderTimer);
       if (positionTimer) clearTimeout(positionTimer);
       if (cpTimer) clearTimeout(cpTimer);
-      set({ input: '', nodes: [], edges: [], start: '', error: null, selectedNodeId: null, selectedEdgeId: null, edgeControlPoints: {} });
+      set({ input: '', nodes: [], edges: [], start: '', error: null, selectedNodeId: null, selectedEdgeId: null, edgeControlPoints: {}, layoutAlgorithm: 'hierarchical' });
       useLibraryStore.getState().setActive(null);
+    },
+
+    setLayoutAlgorithm: (type) => {
+      const { nodes, edges, start } = get();
+      const laidOut = applyLayout(nodes, edges, type) as StateNode[];
+      set({ layoutAlgorithm: type, nodes: laidOut, edgeControlPoints: {} });
+      const { activeId } = useLibraryStore.getState();
+      if (activeId) {
+        useLibraryStore.getState().updateEntry(activeId, {
+          positions: extractPositions(laidOut),
+          edgeData: {},
+          layoutAlgorithm: type,
+        });
+      }
+      const newInput = JSON.stringify(serializeToJSM(laidOut, edges, start), null, 2);
+      set({ input: newInput });
     },
 
     addNode: (position) => {
@@ -348,6 +370,18 @@ export const useStore = create<StoreState>((set, get) => {
         const state = get();
         lib.updateEntry(lib.activeId, { edgeData: buildEdgeData(state.edges, state.edgeControlPoints) });
       }, 300);
+    },
+
+    updateEdgeHandle: (edgeId, sourceHandle, targetHandle) => {
+      const { nodes, edges, start } = get();
+      const newEdges = edges.map(e => {
+        if (e.id !== edgeId) return e;
+        const updated = { ...e };
+        if (sourceHandle !== undefined) updated.sourceHandle = sourceHandle;
+        if (targetHandle !== undefined) updated.targetHandle = targetHandle;
+        return updated;
+      });
+      applyCanvasEdit(nodes, newEdges, start);
     },
 
     clearPendingLabel: () => set({ pendingLabelEdgeId: null }),

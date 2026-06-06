@@ -21,6 +21,7 @@ import { useLibraryStore } from '@/lib/libraryStore';
 import { StateNode } from './StateNode';
 import { EditableEdge } from './EditableEdge';
 import { ContextMenu } from './ContextMenu';
+import { LayoutSelector } from './LayoutSelector';
 import type { StateNode as StateNodeType } from '@/lib/jsm/parse';
 
 const nodeTypes: NodeTypes = { stateNode: StateNode };
@@ -49,6 +50,8 @@ export function FlowChart() {
   const addNode = useStore(s => s.addNode);
   const selectNode = useStore(s => s.selectNode);
   const selectEdge = useStore(s => s.selectEdge);
+  const layoutAlgorithm = useStore(s => s.layoutAlgorithm);
+  const setLayoutAlgorithm = useStore(s => s.setLayoutAlgorithm);
   const setDrawerOpen = useLibraryStore(s => s.setDrawerOpen);
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -147,7 +150,11 @@ export function FlowChart() {
         <Background />
         <Controls />
         <MiniMap />
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-3 right-3 z-10 flex gap-2">
+          <LayoutSelector
+            value={layoutAlgorithm}
+            onChange={setLayoutAlgorithm}
+          />
           <button
             onClick={() => addNode({ x: 200, y: 200 })}
             className="rounded-md bg-white border border-zinc-200 shadow-sm px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"

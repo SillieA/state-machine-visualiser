@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { LayoutType } from '@/lib/jsm/layout';
 
 export type Positions = Record<string, { x: number; y: number }>;
 
@@ -15,6 +16,7 @@ export type SavedJSM = {
   raw: string;
   positions: Positions;
   edgeData?: Record<string, PersistedEdgeData>;
+  layoutAlgorithm?: LayoutType;
   createdAt: number;
   updatedAt: number;
 };
@@ -23,11 +25,13 @@ interface LibraryState {
   entries: SavedJSM[];
   activeId: string | null;
   isDrawerOpen: boolean;
+  isHydrated: boolean;
   createEntry: (name: string, raw: string, positions: Positions) => string;
-  updateEntry: (id: string, patch: Partial<Pick<SavedJSM, 'name' | 'raw' | 'positions' | 'edgeData'>>) => void;
+  updateEntry: (id: string, patch: Partial<Pick<SavedJSM, 'name' | 'raw' | 'positions' | 'edgeData' | 'layoutAlgorithm'>>) => void;
   removeEntry: (id: string) => void;
   setActive: (id: string | null) => void;
   setDrawerOpen: (open: boolean) => void;
+  setHydrated: (hydrated: boolean) => void;
 }
 
 export const useLibraryStore = create<LibraryState>()(
@@ -36,6 +40,7 @@ export const useLibraryStore = create<LibraryState>()(
       entries: [],
       activeId: null,
       isDrawerOpen: false,
+      isHydrated: false,
 
       createEntry: (name, raw, positions) => {
         const id = crypto.randomUUID();
@@ -65,11 +70,16 @@ export const useLibraryStore = create<LibraryState>()(
       setActive: (id) => set({ activeId: id }),
 
       setDrawerOpen: (open) => set({ isDrawerOpen: open }),
+
+      setHydrated: (hydrated) => set({ isHydrated: hydrated }),
     }),
     {
       name: 'jsm-library',
       skipHydration: true,
       partialize: (state) => ({ entries: state.entries, activeId: state.activeId }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated(true);
+      },
     },
   ),
 );

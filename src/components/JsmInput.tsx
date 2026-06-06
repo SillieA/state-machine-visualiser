@@ -9,8 +9,13 @@ export function JsmInput() {
   const setInput = useStore(s => s.setInput);
   const resetLayout = useStore(s => s.resetLayout);
 
-  const { activeId, entries, setDrawerOpen } = useLibraryStore();
+  const { activeId, entries, isHydrated, setDrawerOpen, setHydrated } = useLibraryStore();
   const activeEntry = entries.find(e => e.id === activeId);
+
+  // Hydrate on mount
+  if (!isHydrated && typeof window !== 'undefined') {
+    useLibraryStore.persist.rehydrate();
+  }
 
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -41,20 +46,24 @@ export function JsmInput() {
       )}
 
       <div className="flex gap-2">
-        <button
-          onClick={resetLayout}
-          disabled={!activeEntry}
-          className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Reset Layout
-        </button>
-        <button
-          onClick={() => activeEntry && exportJSM(activeEntry.name, activeEntry.raw)}
-          disabled={!activeEntry}
-          className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Export ↓
-        </button>
+        {isHydrated && (
+          <>
+            <button
+              onClick={resetLayout}
+              disabled={!activeEntry}
+              className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Reset Layout
+            </button>
+            <button
+              onClick={() => activeEntry && exportJSM(activeEntry.name, activeEntry.raw)}
+              disabled={!activeEntry}
+              className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Export ↓
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
