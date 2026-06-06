@@ -70,3 +70,26 @@ Key concepts:
 3. Dagre layout util: takes nodes/edges, returns nodes with x/y
 4. Zustand store wiring everything together
 5. UI: left panel (textarea + validate) / right panel (React Flow canvas)
+
+## Deployment
+
+**Static Export (Current)**
+- `next.config.ts` uses `output: "export"` for static site generation
+- Builds to fully static HTML/CSS/JS with no server required
+- Deploy to: Cloudflare Pages, Vercel Static, Netlify, GitHub Pages, S3 + CloudFront
+- All app logic runs client-side (browser); state persisted to localStorage
+- Works offline; no cold starts or server latency
+
+**Build & deploy:**
+```bash
+pnpm build          # → out/ directory (static HTML + assets)
+pnpm start          # local preview (serves from out/)
+```
+
+**Future: Server-side features (GitHub integration, etc.)**
+- When adding API routes or dynamic server logic (e.g., load JSM files from GitHub):
+  1. Remove `output: "export"` from `next.config.ts`
+  2. Add API routes in `src/app/api/` (e.g., `src/app/api/github/route.ts`)
+  3. Use dynamic rendering/revalidation as needed
+  4. Deploy to Vercel, Render, or Node.js-compatible host
+- Current client-side code (stores, parsers, UI) requires no changes — only add server handlers alongside
