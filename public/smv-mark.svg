@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="JSMV logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Subtle border -->
+  <rect width="64" height="64" rx="14" fill="none" stroke="#93c5fd" stroke-width="1.5" stroke-opacity="0.45"/>
+
+  <!--
+    4-node diamond graph. Edges are drawn FIRST so node circles sit on top,
+    cleanly capping each edge at the node center with no double-opacity bleed.
+    Edge lines use exact node cx/cy as endpoints.
+    N1(44,9) N2(58,20) N3(36,26) N4(54,38)
+  -->
+
+  <!-- Edges -->
+  <line x1="44" y1="9"  x2="58" y2="20" stroke="#3b82f6" stroke-width="2"   stroke-opacity="0.35" stroke-linecap="round"/>
+  <line x1="44" y1="9"  x2="36" y2="26" stroke="#3b82f6" stroke-width="2"   stroke-opacity="0.35" stroke-linecap="round"/>
+  <line x1="58" y1="20" x2="54" y2="38" stroke="#3b82f6" stroke-width="1.5" stroke-opacity="0.30" stroke-linecap="round"/>
+  <line x1="36" y1="26" x2="54" y2="38" stroke="#3b82f6" stroke-width="1.5" stroke-opacity="0.30" stroke-linecap="round"/>
+  <!-- Cross edge for interest — passes through empty space so no overlap compound -->
+  <line x1="58" y1="20" x2="36" y2="26" stroke="#3b82f6" stroke-width="1.5" stroke-opacity="0.18" stroke-linecap="round" stroke-dasharray="3 2"/>
+
+  <!-- Nodes on top — circles fully cover edge endpoints, no double-opacity at joins -->
+  <circle cx="44" cy="9"  r="5" fill="#60a5fa" fill-opacity="0.60"/>
+  <circle cx="58" cy="20" r="5" fill="#60a5fa" fill-opacity="0.60"/>
+  <circle cx="36" cy="26" r="5" fill="#60a5fa" fill-opacity="0.60"/>
+  <circle cx="54" cy="38" r="5" fill="#60a5fa" fill-opacity="0.60"/>
+
+  <!-- JSMV — large, anchored bottom-left, soft navy -->
+  <text
+    x="4"
+    y="57"
+    font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
+    font-size="20"
+    font-weight="800"
+    letter-spacing="-0.5"
+    fill="#1e3a5f"
+    fill-opacity="0.80"
+  >JSMV</text>
+</svg>
