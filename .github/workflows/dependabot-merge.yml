@@ -73,7 +73,6 @@ jobs:
       - name: Review with GitHub Copilot
         id: copilot
         run: |
-          echo "diff=${{ steps.diff.outputs.summary }}" >> $GITHUB_OUTPUT
           echo "✓ GitHub Copilot review requested via CLI"
 
       - name: Post Copilot review comment
@@ -122,5 +121,4 @@ jobs:
             } catch (error) {
               console.log('ℹ️ PR may already be merged or blocked by branch protection');
             }
-
 
