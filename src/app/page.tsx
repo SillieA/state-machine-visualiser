@@ -6,6 +6,7 @@ import { LibraryDrawer } from '@/components/LibraryDrawer';
 import { InspectorPanel } from '@/components/InspectorPanel';
 import { useLibraryStore } from '@/lib/libraryStore';
 import { useStore } from '@/lib/store';
+import { decodeJSM } from '@/lib/shareState';
 
 export default function Home() {
   const loadEntry = useStore(s => s.loadEntry);
@@ -15,9 +16,54 @@ export default function Home() {
   const showInspector = !!(selectedNodeId || selectedEdgeId);
 
   useEffect(() => {
-    useLibraryStore.persist.rehydrate();
-    const { activeId } = useLibraryStore.getState();
-    if (activeId) loadEntry(activeId);
+    // Only run on client
+    if (typeof window === 'undefined') return;
+
+    const init = async () => {
+      // Ensure library is hydrated first
+      await useLibraryStore.persist.rehydrate();
+
+      const searchParams = new URLSearchParams(window.location.search);
+      const name = searchParams.get('name');
+      const data = searchParams.get('data');
+
+      if (name && data) {
+        // Decode shared JSM
+        const decoded = decodeJSM(data);
+
+        if (decoded) {
+          // Check if JSM with this name already exists
+          const { entries, createEntry, updateEntry, setActive } = useLibraryStore.getState();
+          const existing = entries.find(e => e.name === name);
+
+          console.warn('Existing entry EXISTS. Delete or rename to import', existing);
+
+          if (!existing) {
+            // Create new entry with shared data
+            const newId = createEntry(decoded.name, decoded.raw, decoded.positions);
+
+            // Update with additional fields (layout, edge data)
+            updateEntry(newId, {
+              layoutAlgorithm: decoded.layoutAlgorithm,
+              edgeData: decoded.edgeData,
+            });
+            setActive(newId);
+            loadEntry(newId);
+          } else {
+            // Load existing entry
+            setActive(existing.id);
+            loadEntry(existing.id);
+          }
+          return;
+        }
+      }
+
+      // Fall back to normal initialization
+      const { activeId } = useLibraryStore.getState();
+      if (activeId) loadEntry(activeId);
+    };
+
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

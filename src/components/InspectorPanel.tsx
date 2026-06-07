@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
+import { EdgeHandleSelector } from '@/components/EdgeHandleSelector';
 import type { EntryAction } from '@/lib/jsm/schema';
 
 function EntryActionRow({
@@ -48,6 +49,7 @@ export function InspectorPanel() {
   const renameNode = useStore(s => s.renameNode);
   const updateEntryActions = useStore(s => s.updateEntryActions);
   const updateEdgeLabel = useStore(s => s.updateEdgeLabel);
+  const updateEdgeHandle = useStore(s => s.updateEdgeHandle);
   const deleteNodes = useStore(s => s.deleteNodes);
   const deleteEdges = useStore(s => s.deleteEdges);
 
@@ -58,12 +60,13 @@ export function InspectorPanel() {
   const [nameDraft, setNameDraft] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (selectedNode) {
       const localName = selectedNode.id.split('.').pop()!;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNameDraft(localName);
     }
-  }, [selectedNode?.id]);
+  }, [selectedNode]);
 
   function commitRename() {
     if (!selectedNode || !nameDraft.trim()) return;
@@ -130,12 +133,23 @@ export function InspectorPanel() {
             onChange={e => updateEdgeLabel(selectedEdge.id, e.target.value)}
           />
         </div>
+        <EdgeHandleSelector
+          label="Attach from"
+          type="source"
+          value={selectedEdge.sourceHandle ?? null}
+          onChange={handle => updateEdgeHandle(selectedEdge.id, handle, undefined)}
+        />
+        <EdgeHandleSelector
+          label="Attach to"
+          type="target"
+          value={selectedEdge.targetHandle ?? null}
+          onChange={handle => updateEdgeHandle(selectedEdge.id, undefined, handle)}
+        />
       </div>
     );
   }
 
   // Node inspector
-  const localName = selectedNode!.id.split('.').pop()!;
   const isStart = selectedNode!.id === start;
 
   return (
