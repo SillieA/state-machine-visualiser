@@ -1,118 +1,88 @@
-name: Test & Auto-merge Dependabot
+name: Dependabot Copilot Review & Auto-merge
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  pull_request_target:
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 jobs:
-  test:
-    if: github.actor == 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    outputs:
-      status: ${{ job.status }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 9
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run tests
-        run: pnpm test
-
-      - name: Build check
-        run: pnpm build
-
-  copilot-review:
+  dependabot-review-and-merge:
     if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Get PR diff
-        id: diff
-        uses: actions/github-script@v7
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Request Copilot review
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const pr = context.payload.pull_request;
-            const { data: files } = await github.rest.pulls.listFiles({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              per_page: 100
-            });
 
-            let diff = `**Dependabot PR**: ${pr.title}\n\n`;
-            diff += `**Files changed**: ${files.length}\n`;
+            // Try reviewer assignment first; if unavailable, fall back to a comment trigger.
+            const reviewerCandidates = [
+              'github-copilot[bot]',
+              'copilot-pull-request-reviewer[bot]'
+            ];
 
-            for (const file of files) {
-              diff += `- ${file.filename} (${file.status}: +${file.additions}/-${file.deletions})\n`;
+            let requested = false;
+            for (const reviewer of reviewerCandidates) {
+              try {
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  reviewers: [reviewer]
+                });
+                core.notice(`Requested review from ${reviewer}`);
+                requested = true;
+                break;
+              } catch (error) {
+                core.warning(`Could not request ${reviewer}: ${error.message}`);
+              }
             }
 
-            core.setOutput('summary', diff);
-            return diff;
-
-      - name: Post Copilot review comment
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            const summary = `${{ steps.diff.outputs.summary }}`;
-
-            const body = `## 🤖 GitHub Copilot Review
-
-            ${summary}
-
-            **Review Status**: ✅ Automated review by GitHub Copilot
-
-            _Ready for automated merge if tests pass._`;
-
-                        github.rest.issues.createComment({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          issue_number: pr.number,
-                          body: body
-                        });
-
-  auto-merge:
-    needs: [test, copilot-review]
-    if: needs.test.outputs.status == 'success' && github.actor == 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Auto-merge Dependabot PR
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-
-            try {
-              await github.rest.pulls.merge({
+            if (!requested) {
+              const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                pull_number: pr.number,
-                merge_method: 'squash'
+                issue_number: pr.number,
+                per_page: 100
               });
-              console.log('✅ Dependabot PR merged successfully');
-            } catch (error) {
-              console.log('ℹ️ PR may already be merged or blocked by branch protection');
+
+              const alreadyRequested = comments.some((comment) =>
+                comment.body && comment.body.includes('@copilot review')
+              );
+
+              if (!alreadyRequested) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: '@copilot review'
+                });
+                core.notice('Posted @copilot review comment as fallback');
+              } else {
+                core.notice('Copilot review already requested via comment');
+              }
             }
+
+      - name: Enable auto-merge
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"
+
+      - name: Skip auto-merge for major updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          echo "Major dependency update detected. Auto-merge intentionally skipped."
