@@ -70,11 +70,6 @@ jobs:
             core.setOutput('summary', diff);
             return diff;
 
-      - name: Review with GitHub Copilot
-        id: copilot
-        run: |
-          echo "✓ Copilot review summary prepared"
-
       - name: Post Copilot review comment
         uses: actions/github-script@v7
         with:
