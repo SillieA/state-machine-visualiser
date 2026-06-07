@@ -21,9 +21,12 @@ export function JsmInput() {
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-zinc-700 truncate">
-          {activeEntry ? activeEntry.name : 'New JSM'}
-        </h2>
+        <div className="flex items-center gap-2 min-w-0">
+          <img src="/smv-mark.svg" alt="JSMV" width={22} height={22} className="h-[22px] w-[22px] shrink-0 rounded-md" />
+          <h2 className="text-sm font-semibold text-zinc-700 truncate">
+            {activeEntry ? activeEntry.name : 'New JSM'}
+          </h2>
+        </div>
         <button
           onClick={() => setDrawerOpen(true)}
           className="shrink-0 text-xs text-zinc-500 hover:text-zinc-800 px-2 py-1 rounded hover:bg-zinc-100 transition-colors"

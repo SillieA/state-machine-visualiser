@@ -12,77 +12,58 @@ export default function Home() {
   const loadEntry = useStore(s => s.loadEntry);
   const selectedNodeId = useStore(s => s.selectedNodeId);
   const selectedEdgeId = useStore(s => s.selectedEdgeId);
+  const isHydrated = useLibraryStore(s => s.isHydrated);
 
   const showInspector = !!(selectedNodeId || selectedEdgeId);
 
   useEffect(() => {
-    // Only run on client
-    if (typeof window === 'undefined') return;
+    // Only run on client after hydration
+    if (typeof window === 'undefined' || !isHydrated) return;
 
-    const init = async () => {
-      // Ensure library is hydrated first
-      await useLibraryStore.persist.rehydrate();
+    const searchParams = new URLSearchParams(window.location.search);
+    const name = searchParams.get('name');
+    const data = searchParams.get('data');
 
-      const searchParams = new URLSearchParams(window.location.search);
-      const name = searchParams.get('name');
-      const data = searchParams.get('data');
+    if (name && data) {
+      // Decode shared JSM
+      const decoded = decodeJSM(data);
 
-      if (name && data) {
-        // Decode shared JSM
-        const decoded = decodeJSM(data);
+      if (decoded) {
+        // Check if JSM with this name already exists
+        const { entries, createEntry, updateEntry, setActive } = useLibraryStore.getState();
+        const existing = entries.find(e => e.name === name);
 
-        if (decoded) {
-          // Check if JSM with this name already exists
-          const { entries, createEntry, updateEntry, setActive } = useLibraryStore.getState();
-          const existing = entries.find(e => e.name === name);
+        console.warn('Existing entry EXISTS. Delete or rename to import', existing);
 
-          console.warn('Existing entry EXISTS. Delete or rename to import', existing);
+        if (!existing) {
+          // Create new entry with shared data
+          const newId = createEntry(decoded.name, decoded.raw, decoded.positions);
 
-          if (!existing) {
-            // Create new entry with shared data
-            const newId = createEntry(decoded.name, decoded.raw, decoded.positions);
-
-            // Update with additional fields (layout, edge data)
-            updateEntry(newId, {
-              layoutAlgorithm: decoded.layoutAlgorithm,
-              edgeData: decoded.edgeData,
-            });
-            setActive(newId);
-            loadEntry(newId);
-          } else {
-            // Load existing entry
-            setActive(existing.id);
-            loadEntry(existing.id);
-          }
-          return;
+          // Update with additional fields (layout, edge data)
+          updateEntry(newId, {
+            layoutAlgorithm: decoded.layoutAlgorithm,
+            edgeData: decoded.edgeData,
+          });
+          setActive(newId);
+          loadEntry(newId);
+        } else {
+          // Load existing entry
+          setActive(existing.id);
+          loadEntry(existing.id);
         }
+        return;
       }
+    }
 
-      // Fall back to normal initialization
-      const { activeId } = useLibraryStore.getState();
-      if (activeId) loadEntry(activeId);
-    };
-
-    init();
+    // Fall back to normal initialization
+    const { activeId } = useLibraryStore.getState();
+    if (activeId) loadEntry(activeId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isHydrated]);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-zinc-50">
       <aside className="flex w-80 shrink-0 flex-col border-r border-zinc-200 bg-white p-4">
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2">
-          <img
-            src="/smv-mark.svg"
-            alt="SMV"
-            width={28}
-            height={28}
-            className="h-7 w-7 rounded-md"
-          />
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">SMV</p>
-            <p className="text-sm font-semibold text-zinc-800">State Machine Visualiser</p>
-          </div>
-        </div>
         <JsmInput />
       </aside>
 

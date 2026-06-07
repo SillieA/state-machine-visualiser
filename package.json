@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start",
+    "start": "serve out",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -46,6 +46,7 @@
     "eslint-config-next": "16.2.7",
     "eslint-plugin-storybook": "^10.4.2",
     "playwright": "^1.60.0",
+    "serve": "^14.2.6",
     "storybook": "^10.4.2",
     "tailwindcss": "^4",
     "typescript": "^5",

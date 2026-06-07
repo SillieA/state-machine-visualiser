@@ -34,7 +34,7 @@ interface LibraryState {
   setHydrated: (hydrated: boolean) => void;
 }
 
-export const useLibraryStore = create<LibraryState>()(
+export const useLibraryStore = create(
   persist(
     (set) => ({
       entries: [],
@@ -42,10 +42,10 @@ export const useLibraryStore = create<LibraryState>()(
       isDrawerOpen: false,
       isHydrated: false,
 
-      createEntry: (name, raw, positions) => {
+      createEntry: (name: string, raw: string, positions: Positions) => {
         const id = crypto.randomUUID();
         const now = Date.now();
-        set(state => ({
+        set((state: LibraryState) => ({
           entries: [
             { id, name, raw, positions, createdAt: now, updatedAt: now },
             ...state.entries,
@@ -54,30 +54,29 @@ export const useLibraryStore = create<LibraryState>()(
         return id;
       },
 
-      updateEntry: (id, patch) =>
-        set(state => ({
+      updateEntry: (id: string, patch: Partial<Pick<SavedJSM, 'name' | 'raw' | 'positions' | 'edgeData' | 'layoutAlgorithm'>>) =>
+        set((state: LibraryState) => ({
           entries: state.entries.map(e =>
             e.id === id ? { ...e, ...patch, updatedAt: Date.now() } : e,
           ),
         })),
 
-      removeEntry: (id) =>
-        set(state => ({
+      removeEntry: (id: string) =>
+        set((state: LibraryState) => ({
           entries: state.entries.filter(e => e.id !== id),
           activeId: state.activeId === id ? null : state.activeId,
         })),
 
-      setActive: (id) => set({ activeId: id }),
+      setActive: (id: string | null) => set({ activeId: id }),
 
-      setDrawerOpen: (open) => set({ isDrawerOpen: open }),
+      setDrawerOpen: (open: boolean) => set({ isDrawerOpen: open }),
 
-      setHydrated: (hydrated) => set({ isHydrated: hydrated }),
+      setHydrated: (hydrated: boolean) => set({ isHydrated: hydrated }),
     }),
     {
       name: 'jsm-library',
-      skipHydration: true,
-      partialize: (state) => ({ entries: state.entries, activeId: state.activeId }),
-      onRehydrateStorage: () => (state) => {
+      partialize: (state: LibraryState) => ({ entries: state.entries, activeId: state.activeId }),
+      onRehydrateStorage: () => (state?: LibraryState) => {
         state?.setHydrated(true);
       },
     },
