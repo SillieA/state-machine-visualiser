@@ -14,6 +14,14 @@ updates:
       prefix: "chore(deps):"
     allow:
       - dependency-type: direct
+    ignore:
+      - dependency-name: "eslint"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "@types/node"
+      - dependency-name: "@types/react"
+      - dependency-name: "@types/react-dom"
+      - dependency-name: "typescript"
     groups:
       npm-dependencies:
         patterns:
