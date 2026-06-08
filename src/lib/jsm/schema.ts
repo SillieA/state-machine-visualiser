@@ -25,7 +25,7 @@ export const StateSchema: z.ZodType<StateInput> = z.object({
 });
 
 export const JSMSchema = z.object({
-  start: z.string(),
+  entryStateName: z.string(),
   states: z.array(StateSchema),
 });
 

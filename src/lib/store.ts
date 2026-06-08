@@ -72,7 +72,7 @@ function tryParse(raw: string, existingPositions: Positions, layoutType: LayoutT
     position: existingPositions[n.id] ?? n.position,
   })) as StateNode[];
 
-  return { ok: true, nodes: merged, edges, startName: result.data.start };
+  return { ok: true, nodes: merged, edges, startName: result.data.entryStateName };
 }
 
 function extractPositions(nodes: StateNode[]): Positions {

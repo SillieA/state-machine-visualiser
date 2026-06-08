@@ -24,7 +24,7 @@ describe('serializeToJSM', () => {
     const edges = [edge('Pending', 'Done', 'finished')];
     const jsm = serializeToJSM(nodes, edges, 'Pending');
 
-    expect(jsm.start).toBe('Pending');
+    expect(jsm.entryStateName).toBe('Pending');
     expect(jsm.states).toHaveLength(2);
     expect(jsm.states[0]).toMatchObject({
       name: 'Pending',
@@ -72,7 +72,7 @@ describe('serializeToJSM', () => {
   it('round-trips through parse then serialize', async () => {
     const { parseJSM } = await import('./parse');
     const original = {
-      start: 'Pending',
+      entryStateName: 'Pending',
       states: [
         {
           name: 'Pending',

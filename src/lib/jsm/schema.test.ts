@@ -34,7 +34,7 @@ describe('StateSchema', () => {
 describe('JSMSchema', () => {
   it('accepts a valid JSM', () => {
     const result = JSMSchema.safeParse({
-      start: 'Pending',
+      entryStateName: 'Pending',
       states: [
         {
           name: 'Pending',
@@ -54,6 +54,6 @@ describe('JSMSchema', () => {
   });
 
   it('rejects missing states', () => {
-    expect(JSMSchema.safeParse({ start: 'A' }).success).toBe(false);
+    expect(JSMSchema.safeParse({ entryStateName: 'A' }).success).toBe(false);
   });
 });

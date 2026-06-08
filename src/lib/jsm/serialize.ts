@@ -41,7 +41,7 @@ export function serializeToJSM(
   const topLevel = nodes.filter(n => getParentId(n.id) === null);
 
   return {
-    start,
+    entryStateName: start,
     states: topLevel.map(serializeState),
   };
 }
