@@ -198,8 +198,8 @@ export const useStore = create<StoreState>((set, get) => {
           if (data?.controlPoint) edgeControlPoints[edge.id] = data.controlPoint;
           return {
             ...edge,
-            ...(data?.sourceHandle != null ? { sourceHandle: data.sourceHandle } : {}),
-            ...(data?.targetHandle != null ? { targetHandle: data.targetHandle } : {}),
+            sourceHandle: data?.sourceHandle ?? 'Bottom-s',
+            targetHandle: data?.targetHandle ?? 'Top-t',
           };
         });
         set({
