@@ -330,8 +330,8 @@ export const useStore = create<StoreState>((set, get) => {
         id,
         source: connection.source,
         target: connection.target,
-        sourceHandle: connection.sourceHandle,
-        targetHandle: connection.targetHandle,
+        sourceHandle: connection.sourceHandle || 'Bottom-s',
+        targetHandle: connection.targetHandle || 'Top-t',
         label: '',
       };
       const newEdges = [...edges, newEdge];
