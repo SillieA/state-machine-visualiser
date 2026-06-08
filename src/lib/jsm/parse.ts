@@ -40,8 +40,6 @@ export function parseJSM(jsm: JSM): { nodes: StateNode[]; edges: Edge[] } {
       id: `${id}->${check.goTo}-${i}`,
       source: id,
       target: check.goTo,
-      sourceHandle: 'Bottom-s',
-      targetHandle: 'Top-t',
       label: check.check,
     })),
   );
