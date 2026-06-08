@@ -1,4 +1,5 @@
 'use client';
+import pako from 'pako';
 import type { SavedJSM } from '@/lib/libraryStore';
 
 function urlSafeEncode(b64: string): string {
@@ -39,6 +40,31 @@ export function decodeJSM(encoded: string): SavedJSM | null {
     return result;
   } catch (error) {
     console.error('Error decoding JSM:', error);
+    return null;
+  }
+}
+
+export function encodeJSMCompressed(jsm: SavedJSM): string {
+  const json = JSON.stringify(jsm);
+  const compressed = pako.deflate(json);
+  const binary = String.fromCharCode(...compressed);
+  const b64 = btoa(binary);
+  return urlSafeEncode(b64);
+}
+
+export function decodeJSMCompressed(encoded: string): SavedJSM | null {
+  try {
+    const b64 = urlSafeDecode(encoded);
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const json = pako.inflate(bytes, { to: 'string' });
+    const result = JSON.parse(json) as SavedJSM;
+    return result;
+  } catch (error) {
+    console.error('Error decoding compressed JSM:', error);
     return null;
   }
 }

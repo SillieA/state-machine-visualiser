@@ -6,7 +6,7 @@ import { LibraryDrawer } from '@/components/LibraryDrawer';
 import { InspectorPanel } from '@/components/InspectorPanel';
 import { useLibraryStore } from '@/lib/libraryStore';
 import { useStore } from '@/lib/store';
-import { decodeJSM } from '@/lib/shareState';
+import { decodeJSMCompressed } from '@/lib/shareState';
 
 export default function Home() {
   const loadEntry = useStore(s => s.loadEntry);
@@ -26,7 +26,7 @@ export default function Home() {
 
     if (name && data) {
       // Decode shared JSM
-      const decoded = decodeJSM(data);
+      const decoded = decodeJSMCompressed(data);
 
       if (decoded) {
         // Check if JSM with this name already exists

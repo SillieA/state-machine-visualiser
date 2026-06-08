@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { useLibraryStore } from '@/lib/libraryStore';
-import { encodeJSM } from '@/lib/shareState';
+import { encodeJSMCompressed } from '@/lib/shareState';
 
 export function ShareButton() {
   const input = useStore(s => s.input);
@@ -32,7 +32,7 @@ export function ShareButton() {
       edgeData: Object.keys(edgeControlPoints).length > 0 ? entry.edgeData : undefined,
     };
 
-    const encoded = encodeJSM(jsm);
+    const encoded = encodeJSMCompressed(jsm);
     const baseUrl = typeof window !== 'undefined' ? window.location.origin + '/state-machine-visualiser' : '';
     const url = `${baseUrl}?name=${encodeURIComponent(entry.name)}&data=${encoded}`;
 
