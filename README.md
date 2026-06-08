@@ -25,7 +25,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```json
 {
-  "start": "Pending",
+  "entryStateName": "Pending",
   "states": [
     {
       "name": "Pending",
@@ -48,13 +48,29 @@ Open [http://localhost:3000](http://localhost:3000).
 }
 ```
 
-- `start` — name of the initial state
+- `entryStateName` — name of the initial state (also accepts legacy `start` field)
 - `entryActions` — conditional logic run on entering a state
-- `exitChecks` — conditional transitions; `goTo` uses dot-notation for child states (`"Complete.Success"`)
+- `exitChecks` — conditional transitions; `goTo` uses dot-notation for child states (`"Complete.Success"`, also accepts legacy `goto`)
 - `children` — nested child states, rendered as a sub-group
+
+### Backward Compatibility
+
+The app accepts both old and new field names:
+- `"start"` is automatically converted to `"entryStateName"`
+- `"goto"` in exitChecks is automatically converted to `"goTo"`
+- Internally, all JSM files are normalized and saved with the canonical field names
+
+## Sharing
+
+Click the **Share** button to copy a URL containing your state machine. The state (positions, layout, transitions) is compressed and embedded in the URL query parameter, making it compact even for large state machines.
+
+- Compressed URLs are ~70-80% shorter than uncompressed equivalents
+- All node positions, custom layout, and edge data are preserved in the share link
+- Recipients load the shared state automatically when opening the link
 
 ## Tech Stack
 
 - [Next.js](https://nextjs.org) (App Router)
 - React Flow (flowchart rendering)
 - TypeScript
+- [pako](https://github.com/nodeca/pako) (Deflate compression)

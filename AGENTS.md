@@ -21,7 +21,7 @@ A Next.js web app for visualising **JSON State Machine (JSM)** files as interact
 
 ```json
 {
-  "start": "Pending",
+  "entryStateName": "Pending",
   "states": [
     {
       "name": "Pending",
@@ -45,12 +45,17 @@ A Next.js web app for visualising **JSON State Machine (JSM)** files as interact
 ```
 
 Key concepts:
-- **`start`** — name of the initial state
+- **`entryStateName`** — name of the initial state (also accepts legacy `start` field for backward compatibility)
 - **`states`** — flat or nested list of state nodes
 - **`entryActions`** — conditional logic run on entering a state (`check` + `action`)
-- **`exitChecks`** — conditional transitions out of a state (`check` + `goTo`)
+- **`exitChecks`** — conditional transitions out of a state (`check` + `goTo`, also accepts legacy `goto`)
 - **`goTo`** — dot-notation reference to a target state, e.g. `"Complete.Success"` for a child state
 - **`children`** — nested child states (rendered as a sub-group in the flowchart)
+
+### Backward Compatibility
+Both old and new field names are accepted during parsing and automatically normalized:
+- `"start"` → `"entryStateName"`
+- `"goto"` → `"goTo"` in exitChecks
 
 ## Architecture notes
 
@@ -70,6 +75,15 @@ Key concepts:
 3. Dagre layout util: takes nodes/edges, returns nodes with x/y
 4. Zustand store wiring everything together
 5. UI: left panel (textarea + validate) / right panel (React Flow canvas)
+
+## Sharing
+
+State machines can be shared via URL with all state preserved:
+- **Encoding**: JSM data (positions, layout, edges) is serialized to JSON, compressed via pako Deflate, then base64-encoded
+- **Compression**: ~70-80% size reduction enables complex state machines to fit in URL
+- **URL format**: `?name=<name>&data=<compressed-encoded-data>`
+- **Recipient flow**: User receives link → URL decoded on page load → JSM auto-loaded with state preserved
+- **Implementation**: `encodeJSMCompressed()` / `decodeJSMCompressed()` in `src/lib/shareState.ts`, used by ShareButton
 
 ## Deployment
 
