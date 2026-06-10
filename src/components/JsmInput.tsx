@@ -27,58 +27,57 @@ export function JsmInput({ sidebarOpen, onToggleSidebar, onToggleFullscreen, ful
 
   return (
     <div className="flex flex-col gap-3 h-full">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-          <img src="/smv-mark.svg" alt="JSMV" width={22} height={22} className="h-[22px] w-[22px] shrink-0 rounded-md" />
-          <h2 className="text-sm font-semibold text-zinc-700 truncate">
-            {activeEntry ? activeEntry.name : 'New JSM'}
-          </h2>
+      <div className="flex items-center gap-2">
+        <img src="/smv-mark.svg" alt="JSMV" width={22} height={22} className="h-[22px] w-[22px] shrink-0 rounded-md" />
+        <h2 className="text-sm font-semibold text-zinc-700 truncate">
+          {activeEntry ? activeEntry.name : 'New JSM'}
+        </h2>
 
-          {/* Sidebar controls - visible in both normal and fullscreen modes */}
-          <div className="flex items-center gap-1 ml-auto">
-            {!fullscreenMode && (
-              <button
-                onClick={onToggleSidebar}
-                className="p-1 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded transition-colors"
-                title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-                aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-              >
-                {sidebarOpen ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                )}
-              </button>
-            )}
-
+        {/* Sidebar and library controls */}
+        <div className="flex items-center gap-1 ml-auto">
+          {!fullscreenMode && (
             <button
-              onClick={onToggleFullscreen}
+              onClick={onToggleSidebar}
               className="p-1 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded transition-colors"
-              title={fullscreenMode ? 'Exit fullscreen' : 'Fullscreen edit mode'}
-              aria-label={fullscreenMode ? 'Exit fullscreen' : 'Fullscreen edit mode'}
+              title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+              aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             >
-              {fullscreenMode ? (
+              {sidebarOpen ? (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               ) : (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4m-4 0l5 5m11-5v4m0-4h-4m4 0l-5 5M4 20v-4m0 4h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               )}
             </button>
-          </div>
+          )}
+
+          <button
+            onClick={onToggleFullscreen}
+            className="p-1 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded transition-colors"
+            title={fullscreenMode ? 'Exit fullscreen' : 'Fullscreen edit mode'}
+            aria-label={fullscreenMode ? 'Exit fullscreen' : 'Fullscreen edit mode'}
+          >
+            {fullscreenMode ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4m-4 0l5 5m11-5v4m0-4h-4m4 0l-5 5M4 20v-4m0 4h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+              </svg>
+            )}
+          </button>
+
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="text-xs text-zinc-500 hover:text-zinc-800 px-2 py-1 rounded hover:bg-zinc-100 transition-colors"
+          >
+            ☰ Library
+          </button>
         </div>
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="shrink-0 text-xs text-zinc-500 hover:text-zinc-800 px-2 py-1 rounded hover:bg-zinc-100 transition-colors"
-        >
-          ☰ Library
-        </button>
       </div>
 
       {sidebarOpen && (
