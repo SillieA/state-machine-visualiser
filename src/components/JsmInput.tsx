@@ -5,13 +5,12 @@ import { ShareButton } from '@/components/ShareButton';
 import { exportJSM } from '@/lib/jsm/export';
 
 interface JsmInputProps {
-  sidebarOpen: boolean;
   onToggleSidebar: () => void;
   onToggleFullscreen: () => void;
   fullscreenMode: boolean;
 }
 
-export function JsmInput({ sidebarOpen, onToggleSidebar, onToggleFullscreen, fullscreenMode }: JsmInputProps) {
+export function JsmInput({ onToggleSidebar, onToggleFullscreen, fullscreenMode }: JsmInputProps) {
   const input = useStore(s => s.input);
   const error = useStore(s => s.error);
   const setInput = useStore(s => s.setInput);
@@ -39,18 +38,12 @@ export function JsmInput({ sidebarOpen, onToggleSidebar, onToggleFullscreen, ful
             <button
               onClick={onToggleSidebar}
               className="p-1 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded transition-colors"
-              title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-              aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
             >
-              {sidebarOpen ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              )}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
           )}
 
@@ -80,45 +73,41 @@ export function JsmInput({ sidebarOpen, onToggleSidebar, onToggleFullscreen, ful
         </div>
       </div>
 
-      {sidebarOpen && (
-        <>
-          <textarea
-            className="flex-1 resize-none rounded-md border border-zinc-300 bg-zinc-50 p-3 font-mono text-xs text-zinc-800 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-            placeholder='{ "start": "Pending", "states": [...] }'
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            spellCheck={false}
-          />
+      <textarea
+        className="flex-1 resize-none rounded-md border border-zinc-300 bg-zinc-50 p-3 font-mono text-xs text-zinc-800 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+        placeholder='{ "start": "Pending", "states": [...] }'
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        spellCheck={false}
+      />
 
-          {error && (
-            <p className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">
-              {error}
-            </p>
-          )}
-
-          <div className="flex gap-2">
-            {isHydrated && (
-              <>
-                <button
-                  onClick={resetLayout}
-                  disabled={!activeEntry}
-                  className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Reset Layout
-                </button>
-                <ShareButton />
-                <button
-                  onClick={() => activeEntry && exportJSM(activeEntry.name, activeEntry.raw)}
-                  disabled={!activeEntry}
-                  className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Export ↓
-                </button>
-              </>
-            )}
-          </div>
-        </>
+      {error && (
+        <p className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">
+          {error}
+        </p>
       )}
+
+      <div className="flex gap-2">
+        {isHydrated && (
+          <>
+            <button
+              onClick={resetLayout}
+              disabled={!activeEntry}
+              className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Reset Layout
+            </button>
+            <ShareButton />
+            <button
+              onClick={() => activeEntry && exportJSM(activeEntry.name, activeEntry.raw)}
+              disabled={!activeEntry}
+              className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Export ↓
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

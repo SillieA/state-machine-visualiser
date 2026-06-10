@@ -69,7 +69,6 @@ export default function Home() {
         // Fullscreen sidebar mode
         <aside className="w-full h-full flex flex-col border-r border-zinc-200 bg-white p-4">
           <JsmInput
-            sidebarOpen={sidebarOpen}
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
             onToggleFullscreen={() => setFullscreenSidebar(false)}
             fullscreenMode
@@ -78,21 +77,32 @@ export default function Home() {
       ) : (
         // Normal layout
         <>
-          <aside
-            className={`flex shrink-0 flex-col border-r border-zinc-200 bg-white transition-all duration-300 ease-in-out ${
-              sidebarOpen ? 'w-80 p-4' : 'w-16 p-2'
-            }`}
-          >
-            <JsmInput
-              sidebarOpen={sidebarOpen}
-              onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-              onToggleFullscreen={() => setFullscreenSidebar(true)}
-              fullscreenMode={false}
-            />
-          </aside>
+          {sidebarOpen && (
+            <aside className="w-80 shrink-0 flex flex-col border-r border-zinc-200 bg-white p-4 transition-all duration-300 ease-in-out">
+              <JsmInput
+                onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                onToggleFullscreen={() => setFullscreenSidebar(true)}
+                fullscreenMode={false}
+              />
+            </aside>
+          )}
 
           <main className="flex-1 overflow-hidden">
             <FlowChart />
+
+            {/* Floating sidebar toggle button */}
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="fixed top-3 left-3 z-40 p-2 bg-white text-zinc-600 hover:text-zinc-800 hover:bg-zinc-100 rounded-lg shadow-sm border border-zinc-200 transition-colors"
+                title="Open sidebar"
+                aria-label="Open sidebar"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </main>
 
           {showInspector && (
