@@ -46,11 +46,3 @@ export function parseJSM(jsm: JSM): { nodes: StateNode[]; edges: Edge[] } {
 
   return { nodes, edges };
 }
-
-export function applyEdgeDefaults(edges: Edge[]): Edge[] {
-  return edges.map(edge => ({
-    ...edge,
-    sourceHandle: edge.sourceHandle ?? 'Bottom-s',
-    targetHandle: edge.targetHandle ?? 'Top-t',
-  }));
-}

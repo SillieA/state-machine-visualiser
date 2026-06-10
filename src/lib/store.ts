@@ -9,7 +9,7 @@ import {
   type XYPosition,
 } from '@xyflow/react';
 import { validateJSM } from '@/lib/jsm/validate';
-import { parseJSM, applyEdgeDefaults, type StateNode } from '@/lib/jsm/parse';
+import { parseJSM, type StateNode } from '@/lib/jsm/parse';
 import { applyLayout, type LayoutType } from '@/lib/jsm/layout';
 import { serializeToJSM } from '@/lib/jsm/serialize';
 import { useLibraryStore, type Positions, type PersistedEdgeData } from '@/lib/libraryStore';
@@ -66,14 +66,13 @@ function tryParse(raw: string, existingPositions: Positions, layoutType: LayoutT
   if (!result.success) return { ok: false, error: result.error };
 
   const { nodes, edges } = parseJSM(result.data);
-  const edgesWithDefaults = applyEdgeDefaults(edges);
-  const laidOut = applyLayout(nodes, edgesWithDefaults, layoutType);
+  const laidOut = applyLayout(nodes, edges, layoutType);
   const merged = laidOut.map(n => ({
     ...n,
     position: existingPositions[n.id] ?? n.position,
   })) as StateNode[];
 
-  return { ok: true, nodes: merged, edges: edgesWithDefaults, startName: result.data.entryStateName };
+  return { ok: true, nodes: merged, edges, startName: result.data.entryStateName };
 }
 
 function extractPositions(nodes: StateNode[]): Positions {
