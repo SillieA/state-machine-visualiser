@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   title: "JSMV — JSON State Machine Visualiser",
   description: "Visualise and edit JSON state machines in an interactive flowchart.",
   icons: {
-    icon: "/smv-mark.svg",
-    shortcut: "/smv-mark.svg",
-    apple: "/smv-mark.svg",
+    icon: "/state-machine-visualiser/smv-mark.svg",
+    shortcut: "/state-machine-visualiser/smv-mark.svg",
+    apple: "/state-machine-visualiser/smv-mark.svg",
   },
 };
 
