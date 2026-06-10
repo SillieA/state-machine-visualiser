@@ -22,14 +22,6 @@ function flattenStates(
   });
 }
 
-export function applyEdgeDefaults(edges: Edge[]): Edge[] {
-  return edges.map(edge => ({
-    ...edge,
-    sourceHandle: edge.sourceHandle ?? 'Bottom-s',
-    targetHandle: edge.targetHandle ?? 'Top-t',
-  }));
-}
-
 export function parseJSM(jsm: JSM): { nodes: StateNode[]; edges: Edge[] } {
   const flat = flattenStates(jsm.states);
 
