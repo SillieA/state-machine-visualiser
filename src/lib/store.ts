@@ -9,7 +9,7 @@ import {
   type XYPosition,
 } from '@xyflow/react';
 import { validateJSM } from '@/lib/jsm/validate';
-import { parseJSM, type StateNode } from '@/lib/jsm/parse';
+import { parseJSM, type StateNode, type ParseProgressCallback } from '@/lib/jsm/parse';
 import { applyLayout, type LayoutType } from '@/lib/jsm/layout';
 import { serializeToJSM } from '@/lib/jsm/serialize';
 import { useLibraryStore, type Positions, type PersistedEdgeData } from '@/lib/libraryStore';
@@ -18,6 +18,8 @@ import type { EntryAction } from '@/lib/jsm/schema';
 interface StoreState {
   input: string;
   error: string | null;
+  isLoading: boolean;
+  parseProgress: { currentIndex: number; totalNodes: number; currentNodeId: string; previousNodeId?: string } | null;
   nodes: StateNode[];
   edges: Edge[];
   start: string;
@@ -55,7 +57,12 @@ type ParseResult =
   | { ok: true; nodes: StateNode[]; edges: Edge[]; startName: string }
   | { ok: false; error: string };
 
-function tryParse(raw: string, existingPositions: Positions, layoutType: LayoutType): ParseResult {
+function tryParse(
+  raw: string,
+  existingPositions: Positions,
+  layoutType: LayoutType,
+  onProgress?: ParseProgressCallback,
+): ParseResult {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -65,7 +72,7 @@ function tryParse(raw: string, existingPositions: Positions, layoutType: LayoutT
   const result = validateJSM(parsed);
   if (!result.success) return { ok: false, error: result.error };
 
-  const { nodes, edges } = parseJSM(result.data);
+  const { nodes, edges } = parseJSM(result.data, onProgress);
   const laidOut = applyLayout(nodes, edges, layoutType);
   const merged = laidOut.map(n => ({
     ...n,
@@ -146,6 +153,8 @@ export const useStore = create<StoreState>((set, get) => {
   return {
     input: '',
     error: null,
+    isLoading: false,
+    parseProgress: null,
     nodes: [],
     edges: [],
     start: '',
@@ -159,16 +168,22 @@ export const useStore = create<StoreState>((set, get) => {
       set({ input });
       if (renderTimer) clearTimeout(renderTimer);
       renderTimer = setTimeout(() => {
+        set({ isLoading: true, parseProgress: null });
         const lib = useLibraryStore.getState();
-        const result = tryParse(input, extractPositions(get().nodes), get().layoutAlgorithm);
+        const result = tryParse(
+          input,
+          extractPositions(get().nodes),
+          get().layoutAlgorithm,
+          (progress) => set({ parseProgress: progress }),
+        );
 
         if (!result.ok) {
-          set({ error: input.trim() ? result.error : null });
+          set({ error: input.trim() ? result.error : null, isLoading: false, parseProgress: null });
           if (lib.activeId) lib.updateEntry(lib.activeId, { raw: input });
           return;
         }
 
-        set({ nodes: result.nodes, edges: result.edges, start: result.startName, error: null });
+        set({ nodes: result.nodes, edges: result.edges, start: result.startName, error: null, isLoading: false, parseProgress: null });
         const positions = extractPositions(result.nodes);
 
         if (lib.activeId) {
@@ -181,12 +196,21 @@ export const useStore = create<StoreState>((set, get) => {
     },
 
     loadEntry: (id) => {
+      set({ isLoading: true, parseProgress: null });
       const entry = useLibraryStore.getState().entries.find(e => e.id === id);
-      if (!entry) return;
+      if (!entry) {
+        set({ isLoading: false });
+        return;
+      }
       const layoutAlgo = entry.layoutAlgorithm ?? 'hierarchical';
-      const result = tryParse(entry.raw, entry.positions, layoutAlgo);
+      const result = tryParse(
+        entry.raw,
+        entry.positions,
+        layoutAlgo,
+        (progress) => set({ parseProgress: progress }),
+      );
       if (!result.ok) {
-        set({ input: entry.raw, nodes: [], edges: [], start: '', error: result.error, edgeControlPoints: {}, layoutAlgorithm: layoutAlgo });
+        set({ input: entry.raw, nodes: [], edges: [], start: '', error: result.error, edgeControlPoints: {}, layoutAlgorithm: layoutAlgo, isLoading: false, parseProgress: null });
       } else {
         const storedEdgeData = entry.edgeData ?? {};
         const edgeControlPoints: Record<string, XYPosition> = {};
@@ -210,6 +234,8 @@ export const useStore = create<StoreState>((set, get) => {
           error: null,
           edgeControlPoints,
           layoutAlgorithm: layoutAlgo,
+          isLoading: false,
+          parseProgress: null,
         });
       }
       useLibraryStore.getState().setActive(id);

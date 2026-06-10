@@ -8,6 +8,13 @@ export type StateNodeData = {
 
 export type StateNode = Node<StateNodeData, 'stateNode'>;
 
+export type ParseProgressCallback = (progress: {
+  currentIndex: number;
+  totalNodes: number;
+  currentNodeId: string;
+  previousNodeId?: string;
+}) => void;
+
 function flattenStates(
   states: State[],
   prefix = '',
@@ -22,21 +29,40 @@ function flattenStates(
   });
 }
 
-export function parseJSM(jsm: JSM): { nodes: StateNode[]; edges: Edge[] } {
+export function parseJSM(
+  jsm: JSM,
+  onProgress?: ParseProgressCallback,
+): { nodes: StateNode[]; edges: Edge[] } {
   const flat = flattenStates(jsm.states);
   
   // Create a map of all possible node IDs for target resolution
   const allNodeIds = new Set(flat.map(f => f.id));
 
-  const nodes: StateNode[] = flat.map(({ id, state }) => ({
-    id,
-    type: 'stateNode',
-    position: { x: 0, y: 0 },
-    data: {
-      label: id,
-      entryActions: state.entryActions ?? [],
-    },
-  }));
+  const nodes: StateNode[] = [];
+  let previousNodeId: string | undefined;
+
+  for (let i = 0; i < flat.length; i++) {
+    const { id, state } = flat[i];
+    
+    onProgress?.({
+      currentIndex: i + 1,
+      totalNodes: flat.length,
+      currentNodeId: id,
+      previousNodeId,
+    });
+
+    nodes.push({
+      id,
+      type: 'stateNode',
+      position: { x: 0, y: 0 },
+      data: {
+        label: id,
+        entryActions: state.entryActions ?? [],
+      },
+    });
+
+    previousNodeId = id;
+  }
 
   const edges: Edge[] = flat.flatMap(({ id, state }) =>
     (state.exitChecks ?? []).map((check, i) => {

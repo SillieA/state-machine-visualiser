@@ -22,6 +22,7 @@ import { StateNode } from './StateNode';
 import { EditableEdge } from './EditableEdge';
 import { ContextMenu } from './ContextMenu';
 import { LayoutSelector } from './LayoutSelector';
+import { ProgressBar } from './ProgressBar';
 import type { StateNode as StateNodeType } from '@/lib/jsm/parse';
 
 const nodeTypes: NodeTypes = { stateNode: StateNode };
@@ -44,6 +45,8 @@ interface ContextMenuState {
 export function FlowChart() {
   const nodes = useStore(s => s.nodes);
   const edges = useStore(s => s.edges);
+  const isLoading = useStore(s => s.isLoading);
+  const parseProgress = useStore(s => s.parseProgress);
   const onNodesChange = useStore(s => s.onNodesChange);
   const onEdgesChange = useStore(s => s.onEdgesChange);
   const connectNodes = useStore(s => s.connectNodes);
@@ -105,12 +108,26 @@ export function FlowChart() {
   if (nodes.length === 0) {
     return (
       <div
-        className="flex h-full flex-col items-center justify-center gap-3 text-zinc-400"
+        className="flex h-full flex-col items-center justify-center gap-3 text-zinc-400 relative"
         onContextMenu={e => {
           e.preventDefault();
           addNode({ x: 100, y: 100 });
         }}
       >
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm rounded-lg z-50">
+            <div className="flex flex-col items-center gap-3">
+              {parseProgress ? (
+                <ProgressBar {...parseProgress} />
+              ) : (
+                <>
+                  <div className="w-8 h-8 border-3 border-zinc-200 border-t-blue-600 rounded-full animate-spin" />
+                  <p className="text-sm text-zinc-600 font-medium">Parsing JSM...</p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
         <p className="text-sm">Paste a JSM in the left panel, or</p>
         <button
           onClick={() => addNode({ x: 200, y: 150 })}
@@ -130,6 +147,20 @@ export function FlowChart() {
 
   return (
     <div ref={flowRef} className="h-full w-full relative">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-50 rounded-lg pointer-events-none">
+          <div className="flex flex-col items-center gap-3">
+            {parseProgress ? (
+              <ProgressBar {...parseProgress} />
+            ) : (
+              <>
+                <div className="w-8 h-8 border-3 border-zinc-200 border-t-blue-600 rounded-full animate-spin" />
+                <p className="text-sm text-zinc-600 font-medium">Parsing JSM...</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}
