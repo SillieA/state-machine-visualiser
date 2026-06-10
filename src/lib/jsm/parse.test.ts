@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseJSM } from './parse';
+import { parseJSM, applyEdgeDefaults } from './parse';
 import type { JSM } from './schema';
 
 const sampleJSM: JSM = {
@@ -58,5 +58,32 @@ describe('parseJSM', () => {
   it('sets node type to stateNode', () => {
     const { nodes } = parseJSM(sampleJSM);
     nodes.forEach(n => expect(n.type).toBe('stateNode'));
+  });
+
+  it('creates edges without handles (defaults applied later)', () => {
+    const { edges } = parseJSM(sampleJSM);
+    expect(edges[0]).not.toHaveProperty('sourceHandle');
+    expect(edges[0]).not.toHaveProperty('targetHandle');
+  });
+});
+
+describe('applyEdgeDefaults', () => {
+  it('adds Bottom-s sourceHandle to edges without one', () => {
+    const edges = [{ id: 'e1', source: 'A', target: 'B', label: 'test' }];
+    const result = applyEdgeDefaults(edges);
+    expect(result[0].sourceHandle).toBe('Bottom-s');
+  });
+
+  it('adds Top-t targetHandle to edges without one', () => {
+    const edges = [{ id: 'e1', source: 'A', target: 'B', label: 'test' }];
+    const result = applyEdgeDefaults(edges);
+    expect(result[0].targetHandle).toBe('Top-t');
+  });
+
+  it('preserves existing handles', () => {
+    const edges = [{ id: 'e1', source: 'A', target: 'B', label: 'test', sourceHandle: 'Left-l', targetHandle: 'Right-r' }];
+    const result = applyEdgeDefaults(edges);
+    expect(result[0].sourceHandle).toBe('Left-l');
+    expect(result[0].targetHandle).toBe('Right-r');
   });
 });
