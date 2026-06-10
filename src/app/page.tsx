@@ -78,6 +78,15 @@ export default function Home() {
       )}
 
       <LibraryDrawer />
+
+      <div className="pointer-events-none fixed bottom-1 right-2 z-50 select-none font-mono text-[10px] text-zinc-400">
+        v{process.env.NEXT_PUBLIC_APP_VERSION}
+        {process.env.NEXT_PUBLIC_BUILD_TIME && (
+          <span className="ml-1 text-zinc-300">
+            ({process.env.NEXT_PUBLIC_BUILD_TIME.slice(0, 16).replace('T', ' ')})
+          </span>
+        )}
+      </div>
     </div>
   );
 }

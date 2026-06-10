@@ -3,7 +3,7 @@ import { parseJSM } from './parse';
 import type { JSM } from './schema';
 
 const sampleJSM: JSM = {
-  entryStateName: 'Pending',
+  start: 'Pending',
   states: [
     {
       name: 'Pending',

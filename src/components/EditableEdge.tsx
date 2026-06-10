@@ -187,15 +187,13 @@ export function EditableEdge({
                 if (e.key === 'Enter') commit();
                 if (e.key === 'Escape') setEditing(false);
               }}
-              className="text-xs text-zinc-800 border border-blue-400 rounded px-1.5 py-0.5 bg-white shadow-sm outline-none"
-              style={{ minWidth: '150px', maxWidth: '400px' }}
+              className="text-xs text-zinc-800 border border-blue-400 rounded px-1.5 py-0.5 bg-white shadow-sm outline-none w-36"
               placeholder="condition…"
             />
           ) : (
             <button
               onClick={startEditing}
-              className="text-xs bg-white border border-zinc-200 rounded px-1.5 py-0.5 text-zinc-800 hover:border-blue-400 shadow-sm transition-colors whitespace-normal break-words text-left"
-              style={{ maxWidth: '300px' }}
+              className="text-xs bg-white border border-zinc-200 rounded px-1.5 py-0.5 text-zinc-800 hover:border-blue-400 shadow-sm transition-colors max-w-[160px] truncate"
             >
               {label ? String(label) : <span className="text-zinc-300 italic">condition</span>}
             </button>
