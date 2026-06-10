@@ -86,4 +86,14 @@ describe('applyEdgeDefaults', () => {
     expect(result[0].sourceHandle).toBe('Left-l');
     expect(result[0].targetHandle).toBe('Right-r');
   });
+
+  it('roundtrip: parsed edges with defaults render correctly', () => {
+    // Parse JSM to get edges (no handles yet)
+    const { edges: rawEdges } = parseJSM(sampleJSM);
+    // Apply defaults as done in tryParse
+    const edgesWithDefaults = applyEdgeDefaults(rawEdges);
+    
+    // Snapshot captures full edge structure with handles
+    expect(edgesWithDefaults).toMatchSnapshot();
+  });
 });
