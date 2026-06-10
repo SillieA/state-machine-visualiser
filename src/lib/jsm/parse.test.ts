@@ -3,7 +3,7 @@ import { parseJSM, applyEdgeDefaults } from './parse';
 import type { JSM } from './schema';
 
 const sampleJSM: JSM = {
-  start: 'Pending',
+  entryStateName: 'Pending',
   states: [
     {
       name: 'Pending',
@@ -60,7 +60,7 @@ describe('parseJSM', () => {
     nodes.forEach(n => expect(n.type).toBe('stateNode'));
   });
 
-  it('creates edges without handles (defaults applied later)', () => {
+  it('creates edges without handles (defaults applied by tryParse)', () => {
     const { edges } = parseJSM(sampleJSM);
     expect(edges[0]).not.toHaveProperty('sourceHandle');
     expect(edges[0]).not.toHaveProperty('targetHandle');
@@ -68,32 +68,22 @@ describe('parseJSM', () => {
 });
 
 describe('applyEdgeDefaults', () => {
-  it('adds Bottom-s sourceHandle to edges without one', () => {
-    const edges = [{ id: 'e1', source: 'A', target: 'B', label: 'test' }];
-    const result = applyEdgeDefaults(edges);
-    expect(result[0].sourceHandle).toBe('Bottom-s');
-  });
+  const { edges } = parseJSM(sampleJSM);
 
-  it('adds Top-t targetHandle to edges without one', () => {
-    const edges = [{ id: 'e1', source: 'A', target: 'B', label: 'test' }];
+  it('adds Bottom-s sourceHandle and Top-t targetHandle', () => {
     const result = applyEdgeDefaults(edges);
-    expect(result[0].targetHandle).toBe('Top-t');
+    result.forEach(edge => {
+      expect(edge.sourceHandle).toBe('Bottom-s');
+      expect(edge.targetHandle).toBe('Top-t');
+    });
   });
 
   it('preserves existing handles', () => {
-    const edges = [{ id: 'e1', source: 'A', target: 'B', label: 'test', sourceHandle: 'Left-l', targetHandle: 'Right-r' }];
-    const result = applyEdgeDefaults(edges);
+    const customEdges = [
+      { ...edges[0], sourceHandle: 'Left-l', targetHandle: 'Right-r' },
+    ];
+    const result = applyEdgeDefaults(customEdges);
     expect(result[0].sourceHandle).toBe('Left-l');
     expect(result[0].targetHandle).toBe('Right-r');
-  });
-
-  it('roundtrip: parsed edges with defaults render correctly', () => {
-    // Parse JSM to get edges (no handles yet)
-    const { edges: rawEdges } = parseJSM(sampleJSM);
-    // Apply defaults as done in tryParse
-    const edgesWithDefaults = applyEdgeDefaults(rawEdges);
-    
-    // Snapshot captures full edge structure with handles
-    expect(edgesWithDefaults).toMatchSnapshot();
   });
 });

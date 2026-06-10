@@ -198,11 +198,14 @@ export const useStore = create<StoreState>((set, get) => {
           const data = storedEdgeData[key];
           if (data?.controlPoint) edgeControlPoints[edge.id] = data.controlPoint;
           
-          // Overlay stored handles on top of defaults (edge already has defaults from tryParse)
+          // Apply stored handles if available, otherwise apply defaults
+          const sourceHandle = data?.sourceHandle ?? 'Bottom-s';
+          const targetHandle = data?.targetHandle ?? 'Top-t';
+          
           return {
             ...edge,
-            ...(data?.sourceHandle != null ? { sourceHandle: data.sourceHandle } : {}),
-            ...(data?.targetHandle != null ? { targetHandle: data.targetHandle } : {}),
+            sourceHandle,
+            targetHandle,
           };
         });
         set({
