@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import { useStore } from '@/lib/store';
 import { useLibraryStore } from '@/lib/libraryStore';
 import { ShareButton } from '@/components/ShareButton';
@@ -28,7 +27,7 @@ export function JsmInput({ onToggleSidebar, onToggleFullscreen, fullscreenMode }
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="flex items-center gap-2">
-        <Image src="/smv-mark.svg" alt="JSMV" width={22} height={22} className="h-[22px] w-[22px] shrink-0 rounded-md" />
+        <img src="/state-machine-visualiser/smv-mark.svg" alt="JSMV" width={22} height={22} className="h-[22px] w-[22px] shrink-0 rounded-md" />
         <h2 className="text-sm font-semibold text-zinc-700 truncate">
           {activeEntry ? activeEntry.name : 'New JSM'}
         </h2>
