@@ -10,6 +10,7 @@ import { decodeJSMCompressed } from '@/lib/shareState';
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [fullscreenSidebar, setFullscreenSidebar] = useState(false);
   const loadEntry = useStore(s => s.loadEntry);
   const selectedNodeId = useStore(s => s.selectedNodeId);
   const selectedEdgeId = useStore(s => s.selectedEdgeId);
@@ -64,39 +65,42 @@ export default function Home() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-zinc-50">
-      <aside
-        className={`flex shrink-0 flex-col border-r border-zinc-200 bg-white transition-all duration-300 ease-in-out ${
-          sidebarOpen ? 'w-80 p-4' : 'w-16'
-        }`}
-      >
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="mb-4 -ml-2 -mt-2 rounded p-2 text-zinc-600 hover:bg-zinc-100 transition-colors"
-          title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-          aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-        >
-          {sidebarOpen ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          )}
-        </button>
-
-        {sidebarOpen && <JsmInput />}
-      </aside>
-
-      <main className="flex-1 overflow-hidden">
-        <FlowChart />
-      </main>
-
-      {showInspector && (
-        <aside className="flex w-72 shrink-0 flex-col border-l border-zinc-200 bg-white overflow-y-auto transition-all duration-300">
-          <InspectorPanel />
+      {fullscreenSidebar ? (
+        // Fullscreen sidebar mode
+        <aside className="w-full h-full flex flex-col border-r border-zinc-200 bg-white p-4">
+          <JsmInput
+            sidebarOpen={sidebarOpen}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            onToggleFullscreen={() => setFullscreenSidebar(false)}
+            fullscreenMode
+          />
         </aside>
+      ) : (
+        // Normal layout
+        <>
+          <aside
+            className={`flex shrink-0 flex-col border-r border-zinc-200 bg-white transition-all duration-300 ease-in-out ${
+              sidebarOpen ? 'w-80 p-4' : 'w-16 p-2'
+            }`}
+          >
+            <JsmInput
+              sidebarOpen={sidebarOpen}
+              onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+              onToggleFullscreen={() => setFullscreenSidebar(true)}
+              fullscreenMode={false}
+            />
+          </aside>
+
+          <main className="flex-1 overflow-hidden">
+            <FlowChart />
+          </main>
+
+          {showInspector && (
+            <aside className="flex w-72 shrink-0 flex-col border-l border-zinc-200 bg-white overflow-y-auto transition-all duration-300">
+              <InspectorPanel />
+            </aside>
+          )}
+        </>
       )}
 
       <LibraryDrawer />

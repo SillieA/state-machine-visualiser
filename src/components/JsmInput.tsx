@@ -4,7 +4,14 @@ import { useLibraryStore } from '@/lib/libraryStore';
 import { ShareButton } from '@/components/ShareButton';
 import { exportJSM } from '@/lib/jsm/export';
 
-export function JsmInput() {
+interface JsmInputProps {
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
+  onToggleFullscreen: () => void;
+  fullscreenMode: boolean;
+}
+
+export function JsmInput({ sidebarOpen, onToggleSidebar, onToggleFullscreen, fullscreenMode }: JsmInputProps) {
   const input = useStore(s => s.input);
   const error = useStore(s => s.error);
   const setInput = useStore(s => s.setInput);
@@ -26,6 +33,45 @@ export function JsmInput() {
           <h2 className="text-sm font-semibold text-zinc-700 truncate">
             {activeEntry ? activeEntry.name : 'New JSM'}
           </h2>
+
+          {/* Sidebar controls - visible in both normal and fullscreen modes */}
+          <div className="flex items-center gap-1 ml-auto">
+            {!fullscreenMode && (
+              <button
+                onClick={onToggleSidebar}
+                className="p-1 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded transition-colors"
+                title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+              >
+                {sidebarOpen ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={onToggleFullscreen}
+              className="p-1 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded transition-colors"
+              title={fullscreenMode ? 'Exit fullscreen' : 'Fullscreen edit mode'}
+              aria-label={fullscreenMode ? 'Exit fullscreen' : 'Fullscreen edit mode'}
+            >
+              {fullscreenMode ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4m-4 0l5 5m11-5v4m0-4h-4m4 0l-5 5M4 20v-4m0 4h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
         <button
           onClick={() => setDrawerOpen(true)}
@@ -35,41 +81,45 @@ export function JsmInput() {
         </button>
       </div>
 
-      <textarea
-        className="flex-1 resize-none rounded-md border border-zinc-300 bg-zinc-50 p-3 font-mono text-xs text-zinc-800 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-        placeholder='{ "start": "Pending", "states": [...] }'
-        value={input}
-        onChange={e => setInput(e.target.value)}
-        spellCheck={false}
-      />
+      {sidebarOpen && (
+        <>
+          <textarea
+            className="flex-1 resize-none rounded-md border border-zinc-300 bg-zinc-50 p-3 font-mono text-xs text-zinc-800 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            placeholder='{ "start": "Pending", "states": [...] }'
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            spellCheck={false}
+          />
 
-      {error && (
-        <p className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">
-          {error}
-        </p>
+          {error && (
+            <p className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">
+              {error}
+            </p>
+          )}
+
+          <div className="flex gap-2">
+            {isHydrated && (
+              <>
+                <button
+                  onClick={resetLayout}
+                  disabled={!activeEntry}
+                  className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Reset Layout
+                </button>
+                <ShareButton />
+                <button
+                  onClick={() => activeEntry && exportJSM(activeEntry.name, activeEntry.raw)}
+                  disabled={!activeEntry}
+                  className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Export ↓
+                </button>
+              </>
+            )}
+          </div>
+        </>
       )}
-
-      <div className="flex gap-2">
-        {isHydrated && (
-          <>
-            <button
-              onClick={resetLayout}
-              disabled={!activeEntry}
-              className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Reset Layout
-            </button>
-            <ShareButton />
-            <button
-              onClick={() => activeEntry && exportJSM(activeEntry.name, activeEntry.raw)}
-              disabled={!activeEntry}
-              className="flex-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Export ↓
-            </button>
-          </>
-        )}
-      </div>
     </div>
   );
 }
