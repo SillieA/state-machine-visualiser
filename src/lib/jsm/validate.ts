@@ -8,7 +8,7 @@ export type ValidationResult =
 function normalizeJSM(input: unknown): unknown {
   if (!input || typeof input !== 'object') return input;
 
-  const obj = input as Record<string, any>;
+  const obj = input as Record<string, unknown>;
 
   // Handle both 'start' and 'entryStateName'
   if (!('entryStateName' in obj) && 'start' in obj) {
@@ -18,10 +18,10 @@ function normalizeJSM(input: unknown): unknown {
 
   // Normalize exitChecks: handle both 'goto' and 'goTo'
   if (obj.states && Array.isArray(obj.states)) {
-    const normalizeStates = (states: any[]): any[] => {
+    const normalizeStates = (states: Record<string, unknown>[]): Record<string, unknown>[] => {
       return states.map(state => {
         if (state.exitChecks && Array.isArray(state.exitChecks)) {
-          state.exitChecks = state.exitChecks.map((check: any) => {
+          state.exitChecks = state.exitChecks.map((check: Record<string, unknown>) => {
             // Handle both 'goto' and 'goTo'
             if (!('goTo' in check) && 'goto' in check) {
               check.goTo = check.goto;
