@@ -4,11 +4,30 @@ export type ValidationResult =
   | { success: true; data: JSM }
   | { success: false; error: string };
 
+interface RawExitCheck {
+  goto?: unknown;
+  goTo?: unknown;
+  [key: string]: unknown;
+}
+
+interface RawState {
+  exitChecks?: RawExitCheck[];
+  children?: RawState[];
+  [key: string]: unknown;
+}
+
+interface RawJSM {
+  start?: unknown;
+  entryStateName?: unknown;
+  states?: RawState[];
+  [key: string]: unknown;
+}
+
 // Normalize input to handle both naming conventions
 function normalizeJSM(input: unknown): unknown {
   if (!input || typeof input !== 'object') return input;
 
-  const obj = input as Record<string, unknown>;
+  const obj = input as RawJSM;
 
   // Handle both 'start' and 'entryStateName'
   if (!('entryStateName' in obj) && 'start' in obj) {
@@ -18,10 +37,10 @@ function normalizeJSM(input: unknown): unknown {
 
   // Normalize exitChecks: handle both 'goto' and 'goTo'
   if (obj.states && Array.isArray(obj.states)) {
-    const normalizeStates = (states: Record<string, unknown>[]): Record<string, unknown>[] => {
+    const normalizeStates = (states: RawState[]): RawState[] => {
       return states.map(state => {
         if (state.exitChecks && Array.isArray(state.exitChecks)) {
-          state.exitChecks = state.exitChecks.map((check: Record<string, unknown>) => {
+          state.exitChecks = state.exitChecks.map((check: RawExitCheck) => {
             // Handle both 'goto' and 'goTo'
             if (!('goTo' in check) && 'goto' in check) {
               check.goTo = check.goto;
