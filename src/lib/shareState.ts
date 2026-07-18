@@ -1,5 +1,5 @@
 'use client';
-import pako from 'pako';
+import { deflate, inflate } from 'pako';
 import type { SavedJSM } from '@/lib/libraryStore';
 
 function urlSafeEncode(b64: string): string {
@@ -46,7 +46,7 @@ export function decodeJSM(encoded: string): SavedJSM | null {
 
 export function encodeJSMCompressed(jsm: SavedJSM): string {
   const json = JSON.stringify(jsm);
-  const compressed = pako.deflate(json);
+  const compressed = deflate(json);
   const binary = String.fromCharCode(...compressed);
   const b64 = btoa(binary);
   return urlSafeEncode(b64);
@@ -60,7 +60,7 @@ export function decodeJSMCompressed(encoded: string): SavedJSM | null {
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i);
     }
-    const json = pako.inflate(bytes, { to: 'string' });
+    const json = inflate(bytes, { toText: true });
     const result = JSON.parse(json) as SavedJSM;
     return result;
   } catch (error) {
